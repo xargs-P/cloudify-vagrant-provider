@@ -75,7 +75,7 @@ def _generate_vagrant_file(config):
 
 def _read_config(config_file_path):
     if not config_file_path:
-        config_file_path = CONFIG_FILE_NAME
+        config_file_path = os.path.join(os.getcwd(), CONFIG_FILE_NAME)
     defaults_config_file_path = os.path.join(
         os.path.dirname(os.path.realpath(__file__)),
         DEFAULTS_CONFIG_FILE_NAME)
