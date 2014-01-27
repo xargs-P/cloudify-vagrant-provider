@@ -52,7 +52,7 @@ def bootstrap(config_path=None):
     _generate_vagrant_file(config)
     try:
         v = vagrant.Vagrant()
-        if v.status.itervalues().next() != 'running':
+        if v.status().itervalues().next() != 'running':
             v.up(provider='virtualbox')
     finally:
         os.remove(GENERATED_VAGRANT_FILE_NAME)
