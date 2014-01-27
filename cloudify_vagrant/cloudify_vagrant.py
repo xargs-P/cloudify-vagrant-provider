@@ -53,9 +53,10 @@ def bootstrap(config_path=None):
     try:
         v = vagrant.Vagrant()
         if v.status().itervalues().next() != 'running':
-            v.up(provider='virtualbox')
+            v.up(provider=config['provider'])
     finally:
-        os.remove(GENERATED_VAGRANT_FILE_NAME)
+        if config['delete_vagrantfile_after_bootstrap']:
+            os.remove(GENERATED_VAGRANT_FILE_NAME)
 
     return config['management_ip']
 
