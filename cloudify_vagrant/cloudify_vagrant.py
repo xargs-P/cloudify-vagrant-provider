@@ -75,7 +75,7 @@ def _generate_vagrant_file(config):
 
 def _read_config(config_file_path):
     if not config_file_path:
-        config_file_path = os.path.join(os.getcwd(), CONFIG_FILE_NAME)
+        config_file_path = CONFIG_FILE_NAME
     defaults_config_file_path = os.path.join(
         os.path.dirname(os.path.realpath(__file__)),
         DEFAULTS_CONFIG_FILE_NAME)
@@ -91,10 +91,11 @@ def _read_config(config_file_path):
 
     with open(config_file_path, 'r') as config_file, \
             open(defaults_config_file_path, 'r') as defaults_config_file:
-        user_config = yaml.safe_load(config_file.read())
+        config = yaml.safe_load(config_file.read())
         defaults_config = yaml.safe_load(defaults_config_file.read())
 
-    merged_config = _deep_merge_dictionaries(user_config, defaults_config)
+    merged_config = _deep_merge_dictionaries(config, defaults_config) \
+        if config else defaults_config
     return merged_config
 
 
