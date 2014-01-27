@@ -1,0 +1,5 @@
+#management_ip: 10.0.0.5
+#
+#cloudify:
+#    cloudify_branch: develop
+#    cloudify_version: 0.1-SNAPSHOT

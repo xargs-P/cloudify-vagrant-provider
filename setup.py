@@ -27,5 +27,11 @@ setup(
     packages=['cloudify_vagrant'],
     license='LICENSE',
     description='the cloudify vagrant provider',
-    install_requires=[]
+    package_data={'cloudify_vagrant': ['Vagrantfile.template',
+                                       'cloudify-config.yaml',
+                                       'cloudify-config.defaults.yaml']},
+    install_requires=[
+        'python-vagrant',
+        'jinja2'
+    ]
 )
