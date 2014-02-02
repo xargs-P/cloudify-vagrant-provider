@@ -36,7 +36,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def init(target_directory, reset_config):
+def init(target_directory, reset_config, is_verbose_output=False):
     if not reset_config and os.path.exists(
             os.path.join(target_directory, CONFIG_FILE_NAME)):
         return False
@@ -47,7 +47,7 @@ def init(target_directory, reset_config):
     return True
 
 
-def bootstrap(config_path=None):
+def bootstrap(config_path=None, is_verbose_output=False):
     config = _read_config(config_path)
     _generate_vagrant_file(config)
     try:
@@ -61,7 +61,7 @@ def bootstrap(config_path=None):
     return config['management_ip']
 
 
-def teardown(management_ip):
+def teardown(management_ip, is_verbose_output=False):
     raise RuntimeError('NOT YET IMPLEMENTED')
 
 
