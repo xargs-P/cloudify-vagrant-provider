@@ -16,7 +16,6 @@
 __author__ = 'ran'
 
 import os
-import subprocess
 import shutil
 import logging
 import yaml
