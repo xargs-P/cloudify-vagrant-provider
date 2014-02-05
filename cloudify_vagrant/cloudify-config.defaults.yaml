@@ -4,4 +4,3 @@ delete_vagrantfile_after_bootstrap: false
 
 cloudify:
     cloudify_branch: develop
-    cloudify_version: 0.1-SNAPSHOT
