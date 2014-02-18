@@ -17,11 +17,14 @@ __author__ = 'ran'
 
 import os
 import shutil
-import logging
 import yaml
 import vagrant
+import sys
 from copy import deepcopy
 from jinja2 import Environment, FileSystemLoader
+import logging
+import logging.config
+import config
 
 
 CONFIG_FILE_NAME = 'cloudify-config.yaml'
@@ -30,45 +33,89 @@ VAGRANT_FILE_NAME = 'Vagrantfile.template'
 GENERATED_VAGRANT_FILE_NAME = 'Vagrantfile'
 
 
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
-logger = logging.getLogger(__name__)
+#initialize logger
+try:
+    d = os.path.dirname(config.LOGGER['handlers']['file']['filename'])
+    if not os.path.exists(d):
+        os.makedirs(d)
+    logging.config.dictConfig(config.LOGGER)
+    lgr = logging.getLogger('main')
+    lgr.setLevel(logging.INFO)
+except ValueError:
+    sys.exit('could not initialize logger.'
+             ' verify your logger config'
+             ' and permissions to write to {0}'
+             .format(config.LOGGER['handlers']['file']['filename']))
 
 
 def init(target_directory, reset_config, is_verbose_output=False):
+    _set_global_verbosity_level(is_verbose_output)
+
     if not reset_config and os.path.exists(
             os.path.join(target_directory, CONFIG_FILE_NAME)):
         return False
 
     provider_dir = os.path.dirname(os.path.realpath(__file__))
+    files_path = os.path.join(provider_dir, CONFIG_FILE_NAME)
+
+    lgr.debug('copying provider files from {0} to {1}'
+              .format(files_path, target_directory))
     shutil.copy(os.path.join(provider_dir, CONFIG_FILE_NAME),
                 target_directory)
     return True
 
 
 def bootstrap(config_path=None, is_verbose_output=False):
-    config = _read_config(config_path)
-    _generate_vagrant_file(config)
+    _set_global_verbosity_level(is_verbose_output)
+
+    provider_config = _read_config(config_path)
+    _generate_vagrant_file(provider_config)
     try:
+        lgr.debug('initializing vagrant client')
         v = vagrant.Vagrant()
+
         if v.status().itervalues().next() != 'running':
-            v.up(provider=config['provider'])
+            lgr.debug('starting vagrant box in {0}'
+                      .format(provider_config['provider']))
+            v.up(provider=provider_config['provider'])
     finally:
-        if config['delete_vagrantfile_after_bootstrap']:
+        if provider_config['delete_vagrantfile_after_bootstrap']:
+            lgr.debug('deleting generated vagrantfile')
             os.remove(GENERATED_VAGRANT_FILE_NAME)
 
-    return config['management_ip']
+    return provider_config['management_ip']
 
 
 def teardown(management_ip, is_verbose_output=False):
+    _set_global_verbosity_level(is_verbose_output)
+
+    lgr.debug('NOT YET IMPLEMENTED')
     raise RuntimeError('NOT YET IMPLEMENTED')
 
 
-def _generate_vagrant_file(config):
+def _set_global_verbosity_level(is_verbose_output=False):
+    # we need both lgr.setLevel and the verbose_output parameter
+    # since not all output is generated at the logger level.
+    # verbose_output can help us control that.
+    global verbose_output
+    verbose_output = is_verbose_output
+    if verbose_output:
+        lgr.setLevel(logging.DEBUG)
+
+
+def _generate_vagrant_file(provider_config):
+
+    lgr.debug('attempting to generate vagrantfile')
     provider_dir = os.path.dirname(os.path.realpath(__file__))
+
+    lgr.debug('loading template environment')
     j2_env = Environment(loader=FileSystemLoader(provider_dir))
+
+    lgr.debug('generating content from vagrantfile template')
     vagrant_file_content = \
-        j2_env.get_template(VAGRANT_FILE_NAME).render(config)
+        j2_env.get_template(VAGRANT_FILE_NAME).render(provider_config)
+
+    lgr.debug('writing content to vagrantfile')
     with open(GENERATED_VAGRANT_FILE_NAME, 'w') as f:
         f.write(vagrant_file_content)
 
@@ -89,13 +136,20 @@ def _read_config(config_file_path):
         raise ValueError('Missing the configuration file; expected to find '
                          'it at {0}'.format(config_file_path))
 
+    lgr.debug('reading provider config files')
     with open(config_file_path, 'r') as config_file, \
             open(defaults_config_file_path, 'r') as defaults_config_file:
-        config = yaml.safe_load(config_file.read())
+
+        lgr.debug('safe loading user config')
+        provider_config = yaml.safe_load(config_file.read())
+
+        lgr.debug('safe loading default config')
         defaults_config = yaml.safe_load(defaults_config_file.read())
 
-    merged_config = _deep_merge_dictionaries(config, defaults_config) \
-        if config else defaults_config
+    lgr.debug('merging configs')
+    merged_config = _deep_merge_dictionaries(
+        provider_config, defaults_config) \
+        if provider_config else defaults_config
     return merged_config
 
 
