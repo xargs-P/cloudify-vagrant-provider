@@ -1,3 +1,4 @@
+# flake8: NOQA
 ########
 # Copyright (c) 2013 GigaSpaces Technologies Ltd. All rights reserved
 #
@@ -13,27 +14,30 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-__author__ = 'ran'
-
-from setuptools import setup
-
-version = '0.3'
-
-setup(
-    name='cloudify-vagrant',
-    version=version,
-    author='ran',
-    author_email='ran@gigaspaces.com',
-    packages=['cloudify_vagrant'],
-    license='LICENSE',
-    description='the cloudify vagrant provider',
-    package_data={'cloudify_vagrant': ['Vagrantfile.template',
-                                       'cloudify-config.yaml',
-                                       'cloudify-config.defaults.yaml']},
-    install_requires=[
-        'python-vagrant',
-        'jinja2',
-        "jsonschema",
-        "IPy"
-    ]
-)
+VAGRANT_SCHEMA = {
+    "type": "object",
+    "required": [
+            "delete_vagrantfile_after_bootstrap",
+            "management_ip",
+            "provider"
+    ],
+    "properties": {
+        "delete_vagrantfile_after_bootstrap": {
+            "enum": [True, False],
+        },
+        "management_ip": {
+            "type": "string"
+        },
+        "provider": {
+            "type": "string"
+        },
+        "cloudify": {
+            "type": "object",
+            "properties": {
+                "cloudify_branch": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

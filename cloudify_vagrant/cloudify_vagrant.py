@@ -26,6 +26,11 @@ import logging
 import logging.config
 import config
 
+# Validator
+from IPy import IP
+from jsonschema import ValidationError, Draft4Validator
+from schemas import VAGRANT_SCHEMA
+
 
 CONFIG_FILE_NAME = 'cloudify-config.yaml'
 DEFAULTS_CONFIG_FILE_NAME = 'cloudify-config.defaults.yaml'
@@ -69,7 +74,9 @@ def bootstrap(config_path=None, is_verbose_output=False):
     _set_global_verbosity_level(is_verbose_output)
 
     provider_config = _read_config(config_path)
+    _validate_config(config)
     _generate_vagrant_file(provider_config)
+
     try:
         lgr.debug('initializing vagrant client')
         v = vagrant.Vagrant()
@@ -164,3 +171,34 @@ def _deep_merge_dictionaries(overriding_dict, overridden_dict):
         else:
             merged_dict[k] = deepcopy(v)
     return merged_dict
+
+
+def _validate_config(config, schema=VAGRANT_SCHEMA):
+    verifier = VagrantConfigFileValidator()
+    lgr.info('validating provider configuration file...')
+
+    verifier._validate_cidr('management_ip', config['management_ip'])
+    verifier._validate_schema(config, schema)
+
+
+class VagrantConfigFileValidator:
+
+    def _validate_schema(self, config, schema):
+        v = Draft4Validator(schema)
+        if v.iter_errors(config):
+            errors = ';\n'.join('config file validation error found at key:'
+                                ' %s, %s' % ('.'.join(e.path), e.message)
+                                for e in v.iter_errors(config))
+        try:
+            v.validate(config)
+        except ValidationError:
+            lgr.error('{0}'.format(errors))
+            sys.exit()
+
+    def _validate_cidr(self, field, cidr):
+        try:
+            IP(cidr)
+        except ValueError as e:
+            lgr.error('config file validation error found at key:'
+                      ' {0}. {1}'.format(field, e.message))
+            sys.exit()

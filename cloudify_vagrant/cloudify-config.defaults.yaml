@@ -1,6 +1,6 @@
 management_ip: 10.0.0.5
 provider: virtualbox
-delete_vagrantfile_after_bootstrap: false
+delete_vagrantfile_after_bootstrap: False
 
 cloudify:
     cloudify_branch: develop
