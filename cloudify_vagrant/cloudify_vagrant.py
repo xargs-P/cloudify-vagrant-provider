@@ -75,7 +75,7 @@ def bootstrap(config_path=None, is_verbose_output=False,
     _set_global_verbosity_level(is_verbose_output)
 
     provider_config = _read_config(config_path)
-    _validate_config(config)
+    # _validate_config(config)
     _generate_vagrant_file(provider_config)
 
     try:
