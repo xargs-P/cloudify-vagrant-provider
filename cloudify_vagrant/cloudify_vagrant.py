@@ -70,7 +70,8 @@ def init(target_directory, reset_config, is_verbose_output=False):
     return True
 
 
-def bootstrap(config_path=None, is_verbose_output=False):
+def bootstrap(config_path=None, is_verbose_output=False,
+              use_bootstrap_script=True):
     _set_global_verbosity_level(is_verbose_output)
 
     provider_config = _read_config(config_path)
