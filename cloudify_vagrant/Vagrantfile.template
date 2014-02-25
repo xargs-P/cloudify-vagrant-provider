@@ -82,8 +82,12 @@ Vagrant.configure('2') do |config|
         su vagrant -c 'vagrant box add #{BOX_NAME} http://dl.dropbox.com/u/13510779/lxc-precise-amd64-2013-07-12.box'
 
         echo 'calling bootstrap script' &&
-        su vagrant -c 'python2.7 #{working_dir}/cosmo-manager/vagrant/bootstrap_lxc_manager.py --management_ip=#{management_ip} --working_dir=#{working_dir} --config_dir=#{config_dir} --cosmo_version=#{cloudify_branch} --install_logstash'
-
+        sudo wget {{ cloudify.cloudify_components_package_url }} -P {{ cloudify.cloudify_packages_path }} &&
+        sudo wget {{ cloudify.cloudify_package_url }} -P {{ cloudify.cloudify_packages_path }} &&
+        sudo dpkg -i {{ cloudify.cloudify_packages_path }}/*.deb &&
+        sudo {{ cloudify.cloudify_components_package_path }}/cloudify3-components-bootstrap.sh &&
+        sudo {{ cloudify.cloudify_package_path }}/cloudify3-bootstrap.sh &&
+   
         # install vagrant-host-provisioner plugin
         sudo chown -R vagrant /home/vagrant/ENV/ &&
         source /home/vagrant/ENV/bin/activate &&
