@@ -75,7 +75,7 @@ def bootstrap(config_path=None, is_verbose_output=False,
     _set_global_verbosity_level(is_verbose_output)
 
     provider_config = _read_config(config_path)
-    # _validate_config(config)
+    _validate_config(provider_config)
     _generate_vagrant_file(provider_config)
 
     try:
@@ -174,32 +174,42 @@ def _deep_merge_dictionaries(overriding_dict, overridden_dict):
     return merged_dict
 
 
-def _validate_config(config, schema=VAGRANT_SCHEMA):
+def _validate_config(provider_config, schema=VAGRANT_SCHEMA):
+    global validated
+    validated = True
     verifier = VagrantConfigFileValidator()
-    lgr.info('validating provider configuration file...')
 
-    verifier._validate_cidr('management_ip', config['management_ip'])
-    verifier._validate_schema(config, schema)
+    lgr.info('validating provider configuration file...')
+    verifier._validate_cidr('management_ip', provider_config['management_ip'])
+    verifier._validate_schema(provider_config, schema)
+
+    if validated:
+        lgr.info('provider configuration file validated successfully')
+    else:
+        lgr.error('provider configuration validation failed!')
+        sys.exit(1)
 
 
 class VagrantConfigFileValidator:
 
-    def _validate_schema(self, config, schema):
+    def _validate_schema(self, provider_config, schema):
+        global validated
         v = Draft4Validator(schema)
-        if v.iter_errors(config):
+        if v.iter_errors(provider_config):
             errors = ';\n'.join('config file validation error found at key:'
                                 ' %s, %s' % ('.'.join(e.path), e.message)
-                                for e in v.iter_errors(config))
+                                for e in v.iter_errors(provider_config))
         try:
-            v.validate(config)
+            v.validate(provider_config)
         except ValidationError:
+            validated = False
             lgr.error('{0}'.format(errors))
-            sys.exit()
 
     def _validate_cidr(self, field, cidr):
+        global validated
         try:
             IP(cidr)
         except ValueError as e:
+            validated = False
             lgr.error('config file validation error found at key:'
                       ' {0}. {1}'.format(field, e.message))
-            sys.exit()
