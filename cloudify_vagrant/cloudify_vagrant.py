@@ -76,15 +76,15 @@ def bootstrap(config_path=None, is_verbose_output=False,
 
     provider_config = _read_config(config_path)
     _validate_config(provider_config)
-    _generate_vagrant_file(provider_config)
+    _generate_vagrant_file(provider_config, use_bootstrap_script)
 
     try:
         lgr.debug('initializing vagrant client')
         v = vagrant.Vagrant()
 
         if v.status().itervalues().next() != 'running':
-            lgr.debug('starting vagrant box in {0}'
-                      .format(provider_config['provider']))
+            lgr.info('starting vagrant box in {0}'
+                     .format(provider_config['provider']))
             v.up(provider=provider_config['provider'])
     finally:
         if provider_config['delete_vagrantfile_after_bootstrap']:
@@ -111,7 +111,7 @@ def _set_global_verbosity_level(is_verbose_output=False):
         lgr.setLevel(logging.DEBUG)
 
 
-def _generate_vagrant_file(provider_config):
+def _generate_vagrant_file(provider_config, bootstrap_using_script):
 
     lgr.debug('attempting to generate vagrantfile')
     provider_dir = os.path.dirname(os.path.realpath(__file__))
@@ -120,8 +120,16 @@ def _generate_vagrant_file(provider_config):
     j2_env = Environment(loader=FileSystemLoader(provider_dir))
 
     lgr.debug('generating content from vagrantfile template')
-    vagrant_file_content = \
-        j2_env.get_template(VAGRANT_FILE_NAME).render(provider_config)
+    if bootstrap_using_script:
+        lgr.debug('generating script based vagrant file')
+        vagrant_file_content = \
+            j2_env.get_template('{0}_script'.format(VAGRANT_FILE_NAME)).render(
+                provider_config)
+    else:
+        lgr.debug('generating package based vagrant file')
+        vagrant_file_content = \
+            j2_env.get_template(VAGRANT_FILE_NAME).render(
+                provider_config)
 
     lgr.debug('writing content to vagrantfile')
     with open(GENERATED_VAGRANT_FILE_NAME, 'w') as f:
