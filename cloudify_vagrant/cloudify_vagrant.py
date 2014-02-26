@@ -83,8 +83,8 @@ def bootstrap(config_path=None, is_verbose_output=False,
         v = vagrant.Vagrant()
 
         if v.status().itervalues().next() != 'running':
-            lgr.debug('starting vagrant box in {0}'
-                      .format(provider_config['provider']))
+            lgr.info('starting vagrant box in {0}'
+                     .format(provider_config['provider']))
             v.up(provider=provider_config['provider'])
     finally:
         if provider_config['delete_vagrantfile_after_bootstrap']:
