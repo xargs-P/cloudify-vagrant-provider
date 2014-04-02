@@ -20,7 +20,7 @@ from setuptools import setup
 VERSION = '0.8'
 
 setup(
-    name='cloudify-vagrant',
+    name='cloudify-vagrant-provider',
     version=VERSION,
     author='ran',
     author_email='ran@gigaspaces.com',
