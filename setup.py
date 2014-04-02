@@ -17,16 +17,16 @@ __author__ = 'ran'
 
 from setuptools import setup
 
-version = '0.3'
+VERSION = '0.8'
 
 setup(
     name='cloudify-vagrant',
-    version=version,
+    version=VERSION,
     author='ran',
     author_email='ran@gigaspaces.com',
     packages=['cloudify_vagrant'],
     license='LICENSE',
-    description='the cloudify vagrant provider',
+    description='Cloudify vagrant provider',
     package_data={'cloudify_vagrant': ['Vagrantfile.template',
                                        'cloudify-config.yaml',
                                        'cloudify-config.defaults.yaml']},
